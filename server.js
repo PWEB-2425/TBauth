@@ -69,7 +69,12 @@ function estaAutenticado(req, res, next) {
 
 // Rota protegida: só acessível se autenticado
 app.get('/segredo', estaAutenticado, (req, res) => {
-    res.send(`Bem-vindo ao segredo, ${req.session.username}!`);
+    // Adiciona link para a página de pesquisa
+    res.send(`
+        <h1>Bem-vindo ao segredo, ${req.session.username}!</h1>
+        <p><a href="/pesquisa.html">Ir para pesquisa de país</a></p>
+        <p><a href="/logout">Logout</a></p>
+    `);
 });
 
 // Rota de logout: destroi a sessão autenticada
