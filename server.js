@@ -11,8 +11,6 @@ dotenv.config();
 
 const app = express();
 
-// Configura servidor para servir arquivos estáticos da pasta 'public'
-app.use(express.static('public'));
 // Permite receber dados de formulários via POST
 app.use(express.urlencoded({ extended: true }));
 // Configura sessões para autenticação
@@ -20,10 +18,26 @@ app.use(session({ secret: process.env.SECRET || "12345" }));
 // Permite receber dados em JSON
 app.use(express.json());
 
+
 // Rota pública de exemplo
 app.get('/about', (req, res) => {
     res.send('Sobre nós');
 });
+
+// proteger a pagina estatica '/pesquisa.html'
+// tem que ser feito antes de configurar o servidor estatico
+
+app.use('/pesquisa.html', estaAutenticado,(req, res, next) => {
+    if (req.session.username) {
+        next();
+    } else {
+        res.redirect('/login.html');
+    }
+});
+
+// Configura servidor para servir arquivos estáticos da pasta 'public'
+app.use(express.static('public'));
+
 
 // Rota de login: autentica username e cria sessão
 app.post('/login', async (req, res) => {
@@ -64,25 +78,34 @@ app.get('/logout', (req, res) => {
     res.redirect('/login.html');
 });
 
-// Rota para buscar informações de um país usando API externa
-app.get('/pesquisa/:pais', async (req, res) => {
+// Rota autenticada para buscar informações de um país usando API externa
+app.get('/pesquisa/:pais', estaAutenticado, async (req, res) => {
     pais = req.params.pais;
     console.log(`Procurando informações sobre o país: ${pais}`);
     let URL = "https://restcountries.com/v3.1/name/" + pais;
+    
     resposta = await fetch(URL);
-    resultado = await resposta.json();
 
-    console.log(resultado)
+    if (!resposta.ok) {
+        console.error(`Erro ao buscar informações do país: ${pais}`);
+        return res.status(404).send('País não encontrado ou erro na pesquisa.');
+    }
+
+    resultado = await resposta.json();
+    //console.log(resultado)
 
     // Monta objeto com informações relevantes do país
+    // o primeiro da lista
     let info = new Object();
     info.nome = resultado[0].name.common;
     info.capital = resultado[0].capital;
     info.populacao = resultado[0].population;
     info.bandeira = resultado[0].flags.png;
 
+    console.log(`Informações do país ${pais}:`, info);
+    
     // Envia resposta JSON com as informações do país
-    res.send(res.json(info))
+    return res.json(info)
 });
 
 // Variáveis globais para banco de dados
