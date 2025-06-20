@@ -9,6 +9,7 @@ const { MongoClient } = require('mongodb');
 const dotenv = require('dotenv');
 dotenv.config();
 
+// Cria uma instância do Express
 const app = express();
 
 // Permite receber dados de formulários via POST
@@ -119,6 +120,7 @@ let collection; // Coleção de users
 
 // Função para conectar ao MongoDB e iniciar o servidor
 async function start() {
+    console.log('Iniciando aplicação...');
     try { 
         // Cria um novo cliente MongoDB usando a string de conexão do .env ou padrão local
         const client = new MongoClient(process.env.DB || 'mongodb://localhost:27017');
@@ -127,7 +129,7 @@ async function start() {
         db = client.db('usersdb'); // Seleciona a base de dados 'usersdb'
         collection = db.collection('users'); // Seleciona a coleção 'users'
         // Inicia o servidor Express na porta definida no .env ou 3001
-        app.listen(process.env.PORT || 3001, () => {
+        return app.listen(process.env.PORT || 3001, () => {
             const port = process.env.PORT || 3001;
             console.log("Servidor pronto na porta " + port);
         });
